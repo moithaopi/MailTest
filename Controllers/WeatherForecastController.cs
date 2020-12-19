@@ -42,7 +42,7 @@ namespace MailTest.Controllers
         [HttpGet]
         [Route("export")]
         public async Task<IActionResult> ExportWeatherResult(){
-            await mailer.SendEmailAsnyc("moithaopimonwela@gmail.com","Weather Report","Detailed Weather Report");
+            await mailer.SendEmailAsnyc("test@local.com","Weather Report","Detailed Weather Report");
             return NoContent();
         }
     }

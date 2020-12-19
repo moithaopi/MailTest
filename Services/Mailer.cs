@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using MailTest.Contracts;
 using MailTest.Entities;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Hosting;
 using MimeKit;
 
 namespace MailTest.Services
@@ -11,11 +12,15 @@ namespace MailTest.Services
     public class Mailer : IMailer
     {
         private readonly SmtpSetting smtpSetting;
-        public Mailer(IOptions<SmtpSetting> smtpSetting)
+        private readonly IHostingEnvironment enviroment;
+
+        public Mailer(IOptions<SmtpSetting> smtpSetting,IHostingEnvironment enviroment)
         {
             this.smtpSetting = smtpSetting.Value;
-
+            this.enviroment = enviroment;
         }
+
+        [Obsolete]
         public async Task SendEmailAsnyc(string email, string subject, string body)
         {
             try
@@ -29,10 +34,13 @@ namespace MailTest.Services
                 };
                 using(var client=new SmtpClient()){
                     client.ServerCertificateValidationCallback=(s,c,h,e)=>true;
-                    await client.ConnectAsync(smtpSetting.Server,smtpSetting.Port,true);
-                    await client.AuthenticateAsync(smtpSetting.Username,smtpSetting.Password);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
+                    if(enviroment.IsDevelopment()){
+                        client.Connect(smtpSetting.Server,smtpSetting.Port,false);
+                    }else{
+                        client.Connect(smtpSetting.Server);
+                    }
+                    client.Send(message);
+                    client.Disconnect(true);
                 }
             }
             catch(Exception e)
